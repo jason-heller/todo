@@ -1,5 +1,6 @@
 package todo.todolist.controller;
 
+import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import todo.todolist.model.TodoItem;
@@ -17,6 +18,11 @@ public class TodoController {
 
     @Autowired
     private TodoRepo todoRepo;
+
+    @Before
+    public void test() {
+        TodoTest.test(this);
+    }
 
     @PostMapping
     public TodoItem save(@Valid @NotBlank @RequestBody TodoItem todoItem) {
