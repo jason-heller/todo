@@ -8,8 +8,7 @@ import todo.todolist.model.TodoItem;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TodoTest {
-    public TodoTest() {
-        TodoController cont = new TodoController();
+    public static void test(TodoController cont) {
 
         TodoItem item1 = mock(TodoItem.class);
         TodoItem item2 = mock(TodoItem.class);
