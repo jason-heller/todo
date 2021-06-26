@@ -16,16 +16,15 @@ import java.util.Optional;
 @RequestMapping(value = "/todo")
 public class TodoController {
 
-    @Autowired
     private TodoRepo todoRepo;
 
-    @Before
-    public void test() {
-        TodoTest.test(this);
+    @Autowired
+    public TodoController(TodoRepo todoRepo) {
+        this.todoRepo = todoRepo;
     }
 
     @PostMapping
-    public TodoItem save(@Valid @NotBlank @RequestBody TodoItem todoItem) {
+    public TodoItem save(@Valid @RequestBody TodoItem todoItem) {
         return todoRepo.save(todoItem);
     }
 
@@ -43,6 +42,9 @@ public class TodoController {
     @GetMapping
     @RequestMapping(value = "/finished={finished}")
     public List<TodoItem> find(@PathVariable("finished") boolean finished) {
+
+
+
         List<TodoItem> todoItemList = todoRepo.findAll();
         List<TodoItem> todoItemFinished = new ArrayList<>();
 
@@ -57,12 +59,11 @@ public class TodoController {
 
     @PutMapping
     @RequestMapping(value = "/update/{id}/{finished}")
-    public TodoItem update(@PathVariable("id") Long id, @PathVariable("finished") boolean finished) {
+    public TodoItem updateFinished(@PathVariable("id") Long id, @PathVariable("finished") boolean finished) {
         Optional<TodoItem> todoItem = todoRepo.findById(id);
         if (todoItem.isPresent()) {
             todoItem.get().setFinished(finished);
-            todoRepo.save(todoItem.get());
-            return todoItem.get();
+            return todoRepo.save(todoItem.get());
         }
 
         return null;
