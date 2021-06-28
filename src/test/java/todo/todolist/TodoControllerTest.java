@@ -2,18 +2,30 @@ package todo.todolist;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.web.server.ResponseStatusException;
 import todo.todolist.controller.TodoController;
 import todo.todolist.model.TodoItem;
 import todo.todolist.repo.TodoRepo;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import static org.hamcrest.CoreMatchers.is;
+
+import static org.springframework.data.jpa.domain.Specification.where;
 
 public class TodoControllerTest {
     private TodoController subject;
@@ -38,7 +50,45 @@ public class TodoControllerTest {
     }
 
     @Test
-    public void updateFinishedTest() {
+    public void findByIdTest() {
+        TodoItem resultFromRepo = new TodoItem();
+        resultFromRepo.setId(1L);
+        Optional<TodoItem> resultOptional = Optional.of(resultFromRepo);
+
+        when(todoRepoMock.findById(1L)).thenReturn(resultOptional);
+
+        Optional<TodoItem> result = subject.findById(1L);
+
+        assertThat(result, is(resultOptional));
+    }
+
+    @Test
+    public void findByFinishedTest() {
+        TodoItem resultFromRepo = new TodoItem();
+        resultFromRepo.setFinished(true);
+        Optional<TodoItem> resultOptional = Optional.of(resultFromRepo);
+
+        List<TodoItem> itemList = new ArrayList<>();
+        itemList.add(resultFromRepo);
+
+        when(todoRepoMock.findAll(where(isFinished(true)))).thenReturn(itemList));
+
+        Optional<TodoItem> result = subject.findById(1L);
+
+        assertThat(result, is(itemList));
+    }
+
+    private <TodoItem> Specification<TodoItem> isFinished(boolean finished) {
+        return new Specification<TodoItem>() {
+            @Override
+            public Predicate toPredicate(Root<TodoItem> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                return criteriaBuilder.equal(root.get("finished"), finished);
+            }
+        };
+    }
+
+    @Test
+    public void updateFinishedTest_success() {
         TodoItem resultFromRepo = new TodoItem();
         resultFromRepo.setFinished(false);
         resultFromRepo.setId(1L);
@@ -52,16 +102,62 @@ public class TodoControllerTest {
     }
 
     @Test
-    public void updateFinishedSuccess() {
+    public void updateFinishedTest_nonexistentId() {
+        when(todoRepoMock.findById(1L)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(ResponseStatusException.class, () -> {
+            subject.updateFinished(1L, false);
+        });
+    }
+
+    @Test
+    public void updateTest_success() {
         TodoItem resultFromRepo = new TodoItem();
         resultFromRepo.setFinished(false);
         resultFromRepo.setId(1L);
+        resultFromRepo.setDescription("Not Updated");
+
+        TodoItem updateToRepo = new TodoItem();
+        updateToRepo.setFinished(true);
+        updateToRepo.setId(1L);
+        updateToRepo.setDescription("Updated");
 
         when(todoRepoMock.findById(1L)).thenReturn(Optional.of(resultFromRepo));
         when(todoRepoMock.save(resultFromRepo)).thenReturn(resultFromRepo);
 
-        TodoItem result = subject.updateFinished(1L, true);
+        TodoItem result = subject.update(updateToRepo);
 
-        assertTrue(result.isFinished());
+        assertTrue(result.isFinished() && result.getDescription().equals("Updated"));
+    }
+
+    @Test
+    public void updateTest_nonexistentId() {
+        when(todoRepoMock.findById(1L)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(ResponseStatusException.class, () -> {
+            subject.update(new TodoItem());
+        });
+    }
+
+    @Test
+    public void deleteTest_success() {
+        TodoItem resultFromRepo = new TodoItem();
+        resultFromRepo.setId(1L);
+        resultFromRepo.setFinished(false);
+
+        when(todoRepoMock.findById(1L)).thenReturn(Optional.of(resultFromRepo));
+
+        assertDoesNotThrow( () -> {
+            subject.delete(1L);
+        });
+    }
+
+    @Test
+    public void deleteTest_badInput() {
+        when(todoRepoMock.findById(1L)).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(ResponseStatusException.class, () -> {
+            subject.delete(1L);
+        });
     }
 }

@@ -2,15 +2,24 @@ package todo.todolist.controller;
 
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import todo.todolist.model.TodoItem;
 import todo.todolist.repo.TodoRepo;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import static org.springframework.data.jpa.domain.Specification.where;
 
 @RestController
 @RequestMapping(value = "/todo")
@@ -35,26 +44,16 @@ public class TodoController {
 
     @GetMapping
     @RequestMapping(value = "/{id}")
-    public Optional<TodoItem> find(@PathVariable("id") Long id) {
+    public Optional<TodoItem> findById(@PathVariable("id") Long id) {
         return todoRepo.findById(id);
     }
 
     @GetMapping
     @RequestMapping(value = "/finished={finished}")
-    public List<TodoItem> find(@PathVariable("finished") boolean finished) {
+    public List<TodoItem> findByFinished(@PathVariable("finished") boolean finished) {
+        List<TodoItem> todoItemList = todoRepo.findAll(where(isFinished(finished)));
 
-
-
-        List<TodoItem> todoItemList = todoRepo.findAll();
-        List<TodoItem> todoItemFinished = new ArrayList<>();
-
-        todoItemList.forEach(todoItem -> {
-            if (todoItem.isFinished() == finished) {
-                todoItemFinished.add(todoItem);
-            }
-        });
-
-        return todoItemFinished;
+        return todoItemList;
     }
 
     @PutMapping
@@ -66,7 +65,9 @@ public class TodoController {
             return todoRepo.save(todoItem.get());
         }
 
-        return null;
+        throw new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "item not found"
+        );
     }
 
     @PutMapping(path="/update")
@@ -80,7 +81,9 @@ public class TodoController {
             return todoItem.get();
         }
 
-        return null;
+        throw new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "item not found"
+        );
     }
 
     @DeleteMapping
@@ -89,6 +92,20 @@ public class TodoController {
         Optional<TodoItem> todoItem = todoRepo.findById(id);
         if (todoItem.isPresent()) {
             todoRepo.delete(todoItem.get());
+        } else {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "item not found"
+            );
         }
+    }
+
+    // TODO: Refactor (implement elsewhere)
+    private <TodoItem> Specification<TodoItem> isFinished(boolean finished) {
+        return new Specification<TodoItem>() {
+            @Override
+            public Predicate toPredicate(Root<TodoItem> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+                return criteriaBuilder.equal(root.get("finished"), finished);
+            }
+        };
     }
 }
