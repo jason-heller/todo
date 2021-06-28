@@ -1,6 +1,5 @@
 package todo.todolist.controller;
 
-import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -14,8 +13,6 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
