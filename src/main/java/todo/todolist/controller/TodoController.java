@@ -49,7 +49,7 @@ public class TodoController {
     }
 
     @GetMapping
-    @RequestMapping(value = "/finished={finished}")
+    @RequestMapping(value = "/finished/{finished}")
     public List<TodoItem> findByFinished(@PathVariable("finished") boolean finished) {
         List<TodoItem> todoItemList = todoRepo.findAll(where(isFinished(finished)));
 
