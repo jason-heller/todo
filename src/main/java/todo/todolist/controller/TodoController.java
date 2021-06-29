@@ -26,6 +26,7 @@ public class TodoController {
 
     @Autowired
     public TodoController(TodoRepo todoRepo) {
+
         this.todoRepo = todoRepo;
     }
 
@@ -98,7 +99,9 @@ public class TodoController {
 
     // TODO: Refactor (implement elsewhere)
     private <TodoItem> Specification<TodoItem> isFinished(boolean finished) {
+
         return new Specification<TodoItem>() {
+
             @Override
             public Predicate toPredicate(Root<TodoItem> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
                 return criteriaBuilder.equal(root.get("finished"), finished);

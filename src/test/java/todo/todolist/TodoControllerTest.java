@@ -10,10 +10,7 @@ import todo.todolist.controller.TodoController;
 import todo.todolist.model.TodoItem;
 import todo.todolist.repo.TodoRepo;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import javax.persistence.criteria.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -68,7 +65,6 @@ public class TodoControllerTest {
     public void findByFinishedTest() {
         TodoItem resultFromRepo = new TodoItem();
         resultFromRepo.setFinished(true);
-        Optional<TodoItem> resultOptional = Optional.of(resultFromRepo);
 
         List<TodoItem> itemList = new ArrayList<>();
         itemList.add(resultFromRepo);
@@ -79,6 +75,19 @@ public class TodoControllerTest {
         List<TodoItem> result = subject.findByFinished(true);
 
         assertThat(result, is(itemList));
+
+        Specification specification = specificationCaptor.getValue();
+
+        CriteriaBuilder cbMock = mock(CriteriaBuilder.class);
+        CriteriaQuery cqMock = mock(CriteriaQuery.class);
+        Root rootMock = mock(Root.class);
+
+        Path pathMock = mock(Path.class);
+        when(rootMock.get("finished")).thenReturn(pathMock);
+
+        Predicate predicate = specification.toPredicate(rootMock, cqMock, cbMock);
+
+        //assertEquals(predicate.getAlias(), "");
     }
 
     @Test
