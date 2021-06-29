@@ -2,6 +2,8 @@ package todo.todolist;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.server.ResponseStatusException;
 import todo.todolist.controller.TodoController;
@@ -71,20 +73,12 @@ public class TodoControllerTest {
         List<TodoItem> itemList = new ArrayList<>();
         itemList.add(resultFromRepo);
 
-        when(todoRepoMock.findAll(where(isFinished(true)))).thenReturn(itemList));
+        ArgumentCaptor<Specification> specificationCaptor = ArgumentCaptor.forClass(Specification.class);
+        when(todoRepoMock.findAll(specificationCaptor.capture())).thenReturn(itemList);
 
-        Optional<TodoItem> result = subject.findById(1L);
+        List<TodoItem> result = subject.findByFinished(true);
 
         assertThat(result, is(itemList));
-    }
-
-    private <TodoItem> Specification<TodoItem> isFinished(boolean finished) {
-        return new Specification<TodoItem>() {
-            @Override
-            public Predicate toPredicate(Root<TodoItem> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
-                return criteriaBuilder.equal(root.get("finished"), finished);
-            }
-        };
     }
 
     @Test
